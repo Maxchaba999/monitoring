@@ -1,0 +1,2 @@
+# monitoring
+-node_exporter
