@@ -1,0 +1,48 @@
+services:
+
+
+  grafana:
+    image: grafana/grafana
+    user: '1000'
+    volumes:
+      - /storage/db/grafana:/var/lib/grafana
+    ports:
+      - 3000:3000
+
+  prometheus-server:
+    container_name: prometheus-server
+    image: prom/prometheus
+    volumes:
+      - /storage/prometheus:/prometheus:rw # user nobody
+      - /opt/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - /opt/prometheus/alert-rules:/etc/prometheus/alert-rules
+    command:
+      - "--web.listen-address=0.0.0.0:9090"
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+      - "--log.level=error"
+      - "--log.format=json"
+      - "--storage.tsdb.retention.time=10d"
+
+  alertmanager:
+    image: prom/alertmanager
+    container_name: prometheus-alertmanager
+    volumes:
+      - /opt/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+
+
+        #EXPORTERS:
+
+
+  prometheus-node-exporter:
+    container_name: prometheus-node-exporter
+    image: quay.io/prometheus/node-exporter:latest
+    volumes:
+      - "/:/host:ro,rslave"
+      - "/opt/prometheus/textfile-collector:/var/lib/prometheus/node-exporter"
+    command:
+      - "--path.rootfs=/host"
+      - "--collector.textfile"
+      - "--collector.textfile.directory=/var/lib/prometheus/node-exporter"
